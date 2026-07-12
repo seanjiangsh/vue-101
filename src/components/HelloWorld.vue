@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
+
 import viteLogo from "../assets/vite.svg";
 import heroImg from "../assets/hero.png";
 import vueLogo from "../assets/vue.svg";
-import { useTheme } from "../composables/useTheme";
+import { useTheme, type ThemeMode } from "../composables/useTheme";
+import { cycle } from "../utils/misc";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
@@ -11,17 +13,8 @@ const showHero = ref<boolean>(true);
 // Count
 const count = ref<number>(0);
 
-// Color
-type ColorOption =
-  | "primary"
-  | "success"
-  | "warning"
-  | "error"
-  | "info"
-  | "purple"
-  | "pink";
-
-const colors: readonly ColorOption[] = [
+// Color — `as const` makes this a non-empty tuple, as cycle() requires.
+const textColors = [
   "primary",
   "success",
   "warning",
@@ -29,17 +22,23 @@ const colors: readonly ColorOption[] = [
   "info",
   "purple",
   "pink",
-];
-const btnColor = ref<string>(
-  `var(--${colors[Math.floor(Math.random() * colors.length)]})`,
-);
+] as const;
+// Source of truth is the color *name*; the CSS string is derived from it.
+const colorName = ref<(typeof textColors)[number]>("primary");
+const btnTextColor = computed<string>(() => `var(--${colorName.value})`);
 function changeColor(): void {
-  btnColor.value = `var(--${colors[Math.floor(Math.random() * colors.length)]})`;
+  colorName.value = cycle(textColors, colorName.value);
 }
 
-// light/dark theme — all the logic now lives in the composable.
-// Just like `const { theme, toggleTheme } = useTheme()` would be a hook in React.
-const { theme, toggleTheme } = useTheme();
+// light/dark theme — all the logic lives in the composable (a Vue "hook").
+const { nextTheme, cycleTheme } = useTheme();
+
+// Presentation only: how each mode is labelled in the button.
+const labels: Record<ThemeMode, string> = {
+  light: "☀️ Light",
+  dark: "🌙 Dark",
+  system: "💻 System",
+};
 </script>
 
 <template>
@@ -63,11 +62,15 @@ const { theme, toggleTheme } = useTheme();
       <button type="button" class="counter" @click="count++">
         Count is {{ count }}
       </button>
-      <button type="button" :style="{ color: btnColor }" @click="changeColor">
+      <button
+        type="button"
+        :style="{ color: btnTextColor }"
+        @click="changeColor"
+      >
         Change text color
       </button>
-      <button type="button" @click="toggleTheme">
-        Switch to {{ theme === "dark" ? "light" : "dark" }} mode
+      <button type="button" @click="cycleTheme">
+        Switch to {{ labels[nextTheme] }} mode
       </button>
     </div>
   </section>
