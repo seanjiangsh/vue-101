@@ -1,71 +1,116 @@
-import { ref, watch, type Ref } from "vue";
+import {
+  computed,
+  readonly,
+  ref,
+  watch,
+  type ComputedRef,
+  type DeepReadonly,
+  type Ref,
+} from "vue";
 
-export type ThemeMode = "light" | "dark";
+import { cycle } from "../utils/misc";
+
+export type ThemeMode = "light" | "dark" | "system"; // the user's choice
+type EffectiveTheme = "light" | "dark"; // what actually renders
 
 interface UseThemeReturn {
-  theme: Ref<ThemeMode>;
-  toggleTheme: () => void;
+  mode: DeepReadonly<Ref<ThemeMode>>;
+  effectiveTheme: DeepReadonly<Ref<EffectiveTheme>>;
+  nextTheme: ComputedRef<ThemeMode>;
+  cycleTheme: () => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-/**
- * Type guard: narrows an untrusted `unknown` value to `ThemeMode`.
- * After this returns true, TypeScript treats the value as a ThemeMode —
- * no `as` cast needed. Used to validate whatever came out of localStorage.
- */
+// Type guard: narrows an untrusted value (e.g. from localStorage) to ThemeMode.
+// After it returns true, TS treats the value as ThemeMode — no `as` cast.
 function isThemeMode(value: unknown): value is ThemeMode {
-  return value === "light" || value === "dark";
+  return value === "light" || value === "dark" || value === "system";
 }
 
 /**
- * Decide the theme to start with, in priority order:
+ * Decide the mode to start with, in priority order:
  *   1. A previously saved choice in localStorage (user's explicit override).
- *   2. Otherwise, the operating system's color-scheme preference.
+ *   2. Otherwise "system" — i.e. follow the OS preference.
  */
-function getInitialTheme(): ThemeMode {
-  const storedTheme = localStorage.getItem("theme");
-  if (isThemeMode(storedTheme)) {
-    return storedTheme; // validated — safe to trust
-  }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+function getInitialMode(): ThemeMode {
+  const stored = localStorage.getItem("theme");
+  return isThemeMode(stored) ? stored : "system";
 }
 
 // ── Shared state ─────────────────────────────────────────────────────────
 // Everything below runs ONCE, the first time this file is imported. Because
-// `theme` lives at module scope (not inside useTheme), every component that
-// calls useTheme() shares this exact same ref — a tiny global store, no
-// Pinia or Context needed.
+// these refs live at module scope (not inside useTheme), every component that
+// calls useTheme() shares the same instances — a tiny global store, no Pinia
+// or Context needed.
 
-const theme = ref<ThemeMode>(getInitialTheme());
+// The user's *choice*: light | dark | system. This is what we persist.
+const mode = ref<ThemeMode>(getInitialMode());
 
-// Whenever `theme` changes, run its side effects:
-//   1. mirror it onto <html> so the CSS can react, and
-//   2. persist it to localStorage for next visit.
-// Registered once (module scope), so we don't stack a watcher per useTheme()
-// call. `immediate: true` also runs it on load to apply the initial theme.
+// A reactive mirror of the OS preference. It needs its own ref (rather than
+// reading mql.matches directly inside the computed) because mql.matches is NOT
+// reactive — the listener updates this ref so `effectiveTheme` recomputes when
+// the OS theme changes while mode === "system".
+const mql = window.matchMedia("(prefers-color-scheme: dark)");
+const systemTheme = ref<EffectiveTheme>(mql.matches ? "dark" : "light");
+mql.addEventListener("change", (e) => {
+  systemTheme.value = e.matches ? "dark" : "light";
+});
+// No cleanup needed: this listener is a module-scope singleton that lives for
+// the whole app lifetime. (Inside a component you'd remove it in onUnmounted.)
+
+// What actually renders: *derived* from mode + systemTheme, so it's a computed.
+const effectiveTheme = computed<EffectiveTheme>(() =>
+  mode.value === "system" ? systemTheme.value : mode.value,
+);
+
+// Single source of truth for the cycle order; nextTheme derives from it.
+// `as const` makes this a non-empty tuple (not just ThemeMode[]), which is
+// what cycle()'s signature requires — and it keeps the element types literal.
+const themeOrder = ["light", "dark", "system"] as const;
+const nextTheme = computed<ThemeMode>(() => cycle(themeOrder, mode.value));
+
+// ── Side effects ───────────────────────────────────────────────────────────
+
+// Mirror the *rendered* theme onto <html> so the CSS can react.
+// `immediate: true` also runs it on load to apply the initial theme.
 watch(
-  theme,
+  effectiveTheme,
   (current) => {
     document.documentElement.classList.toggle("dark", current === "dark");
+  },
+  { immediate: true },
+);
+
+// Persist the user's *choice* (mode), not the resolved result.
+watch(
+  mode,
+  (current) => {
     localStorage.setItem("theme", current);
   },
   { immediate: true },
 );
 
-function toggleTheme(): void {
-  theme.value = theme.value === "dark" ? "light" : "dark";
+// ── Actions ────────────────────────────────────────────────────────────────
+
+function cycleTheme(): void {
+  mode.value = nextTheme.value;
 }
 
 /**
- * Shared light/dark theme state. The Vue equivalent of a React custom hook —
- * but Vue calls it a *composable*.
+ * Shared light/dark/system theme state. The Vue equivalent of a React custom
+ * hook — but Vue calls it a *composable*.
  *
- *   const { theme, toggleTheme } = useTheme();
+ *   const { mode, effectiveTheme, nextTheme, cycleTheme } = useTheme();
+ *
+ * `mode` and `effectiveTheme` are readonly — change the theme via cycleTheme(),
+ * the composable's controlled entry point (like [state, setState] in React).
  */
 export function useTheme(): UseThemeReturn {
-  return { theme, toggleTheme };
+  return {
+    mode: readonly(mode),
+    effectiveTheme: readonly(effectiveTheme),
+    nextTheme,
+    cycleTheme,
+  };
 }
