@@ -1,34 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 import viteLogo from "../assets/vite.svg";
 import heroImg from "../assets/hero.png";
 import vueLogo from "../assets/vue.svg";
+
 import { useTheme, type ThemeMode } from "../composables/useTheme";
-import { cycle } from "../utils/misc";
+import ColorSwatch from "./ColorSwatch.vue";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
 
 // Count
 const count = ref<number>(0);
-
-// Color — `as const` makes this a non-empty tuple, as cycle() requires.
-const textColors = [
-  "primary",
-  "success",
-  "warning",
-  "error",
-  "info",
-  "purple",
-  "pink",
-] as const;
-// Source of truth is the color *name*; the CSS string is derived from it.
-const colorName = ref<(typeof textColors)[number]>("primary");
-const btnTextColor = computed<string>(() => `var(--${colorName.value})`);
-function changeColor(): void {
-  colorName.value = cycle(textColors, colorName.value);
-}
 
 // light/dark theme — all the logic lives in the composable (a Vue "hook").
 const { nextTheme, cycleTheme } = useTheme();
@@ -62,16 +46,10 @@ const labels: Record<ThemeMode, string> = {
       <button type="button" class="counter" @click="count++">
         Count is {{ count }}
       </button>
-      <button
-        type="button"
-        :style="{ color: btnTextColor }"
-        @click="changeColor"
-      >
-        Change text color
-      </button>
       <button type="button" @click="cycleTheme">
         Switch to {{ labels[nextTheme] }} mode
       </button>
+      <ColorSwatch />
     </div>
   </section>
 </template>
