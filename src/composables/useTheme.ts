@@ -8,7 +8,7 @@ import {
   type Ref,
 } from "vue";
 
-import { cycle } from "../utils/misc";
+import { cycle } from "../utils/array";
 
 export type ThemeMode = "light" | "dark" | "system"; // the user's choice
 type EffectiveTheme = "light" | "dark"; // what actually renders
