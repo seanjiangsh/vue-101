@@ -6,7 +6,7 @@ import heroImg from "../assets/hero.png";
 import vueLogo from "../assets/vue.svg";
 
 import { useTheme, type ThemeMode } from "../composables/useTheme";
-import ColorSwatch from "./ColorSwatch.vue";
+import ColorSwatch from "../components/ColorSwatch.vue";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
