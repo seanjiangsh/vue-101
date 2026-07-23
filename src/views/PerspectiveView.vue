@@ -11,20 +11,41 @@ const rotateZ = ref<number>(0);
 
 // 👉 TODO: perspective() belongs on the CONTAINER (the parent of the box).
 //    Return a style object, e.g. { perspective: `${perspective.value}px` }.
-const containerStyle = computed(() => ({}));
+const containerStyle = computed(() => ({
+  perspective: `${perspective.value}px`,
+}));
 
 // 👉 TODO: the rotations belong on the BOX itself. Build the transform string
 //    from rotateX/Y/Z, e.g.
 //    { transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) rotateZ(${rotateZ.value}deg)` }
-const boxStyle = computed(() => ({}));
+const boxStyle = computed(() => ({
+  transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) rotateZ(${rotateZ.value}deg)`,
+}));
 
 // 👉 TODO: set all four refs back to 0.
-function reset(): void {}
+function reset(): void {
+  perspective.value = 0;
+  rotateX.value = 0;
+  rotateY.value = 0;
+  rotateZ.value = 0;
+}
 
 // 👉 TODO: copy the generated CSS to the clipboard with
 //    navigator.clipboard.writeText(...). Decide what to copy — e.g. just the
 //    box transform, or the full `perspective` + `transform` snippet.
-function copy(): void {}
+async function copy(): Promise<void> {
+  const data = {
+    perspective: perspective.value,
+    rotateX: rotateX.value,
+    rotateY: rotateY.value,
+    rotateZ: rotateZ.value,
+  };
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.warn(err);
+  }
+}
 </script>
 
 <template>
