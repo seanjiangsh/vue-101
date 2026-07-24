@@ -1,49 +1,54 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 
-// The four slider values (state). Declared so the file builds; they're already
-// wired to the sliders via v-model in the template. Feel free to refactor into
-// a single reactive() object if you prefer.
-const perspective = ref<number>(0);
+// A non-zero starting distance so the 3D effect is visible immediately: CSS
+// treats `perspective: 0` as "no perspective", which makes the rotations look
+// like a flat squash rather than a tilt in depth. Shared by the initial value
+// and reset() so the two can't drift.
+const DEFAULT_PERSPECTIVE = 300;
+
+// The four slider values (state), bound to the range inputs with v-model.number.
+const perspective = ref<number>(DEFAULT_PERSPECTIVE);
 const rotateX = ref<number>(0);
 const rotateY = ref<number>(0);
 const rotateZ = ref<number>(0);
 
-// 👉 TODO: perspective() belongs on the CONTAINER (the parent of the box).
-//    Return a style object, e.g. { perspective: `${perspective.value}px` }.
+// perspective() belongs on the CONTAINER — the parent of the element being
+// transformed. It sets the viewer's distance from the 3D scene, so smaller
+// values produce a more extreme effect.
 const containerStyle = computed(() => ({
   perspective: `${perspective.value}px`,
 }));
 
-// 👉 TODO: the rotations belong on the BOX itself. Build the transform string
-//    from rotateX/Y/Z, e.g.
-//    { transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) rotateZ(${rotateZ.value}deg)` }
+// The rotations belong on the BOX itself — the element actually being turned.
 const boxStyle = computed(() => ({
   transform: `rotateX(${rotateX.value}deg) rotateY(${rotateY.value}deg) rotateZ(${rotateZ.value}deg)`,
 }));
 
-// 👉 TODO: set all four refs back to 0.
 function reset(): void {
-  perspective.value = 0;
+  perspective.value = DEFAULT_PERSPECTIVE;
   rotateX.value = 0;
   rotateY.value = 0;
   rotateZ.value = 0;
 }
 
-// 👉 TODO: copy the generated CSS to the clipboard with
-//    navigator.clipboard.writeText(...). Decide what to copy — e.g. just the
-//    box transform, or the full `perspective` + `transform` snippet.
+// Copy a pasteable CSS snippet. This reads the *computeds* rather than
+// rebuilding the strings from the refs, so what lands on the clipboard can
+// never drift from what the box is actually rendering.
 async function copy(): Promise<void> {
-  const data = {
-    perspective: perspective.value,
-    rotateX: rotateX.value,
-    rotateY: rotateY.value,
-    rotateZ: rotateZ.value,
-  };
+  const css = [
+    `.box-container {`,
+    `  perspective: ${containerStyle.value.perspective};`,
+    `}`,
+    `.box {`,
+    `  transform: ${boxStyle.value.transform};`,
+    `}`,
+  ].join("\n");
+
   try {
-    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    await navigator.clipboard.writeText(css);
   } catch (err) {
-    console.warn(err);
+    console.warn("Copy failed:", err);
   }
 }
 </script>
@@ -55,7 +60,9 @@ async function copy(): Promise<void> {
       <section class="settings">
         <div class="settings-container">
           <label>perspective: {{ perspective }}px;</label>
-          <input type="range" min="0" max="999" v-model.number="perspective" />
+          <!-- min="1" keeps the slider out of the `perspective: 0` dead zone,
+               where CSS applies no perspective at all. -->
+          <input type="range" min="1" max="999" v-model.number="perspective" />
 
           <label>rotateX: {{ rotateX }}deg;</label>
           <input type="range" min="-180" max="180" v-model.number="rotateX" />
