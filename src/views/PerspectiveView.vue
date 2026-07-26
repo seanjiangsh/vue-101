@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 // A non-zero starting distance so the 3D effect is visible immediately: CSS
 // treats `perspective: 0` as "no perspective", which makes the rotations look
@@ -9,10 +9,10 @@ const DEFAULT_PERSPECTIVE = 300;
 const COPY_BTN_DEFAULT_TEXT = "Copy";
 const COPY_BTN_COPIED_TEXT = "Style Copied!";
 const COPY_RESET_MS = 2000;
-// Safety net only. The label normally swaps on the button's `transitionend`,
-// but when transitions are disabled (prefers-reduced-motion) that event never
-// fires — so this makes sure the label still updates. Must be comfortably
-// longer than the CSS transition.
+// Safety net for prefers-reduced-motion. The label normally swaps on the
+// button's `transitionend`, but when transitions are disabled that event never
+// fires — so this timer makes sure the label still updates. Keep it comfortably
+// longer than the CSS transition so it doesn't pre-empt the normal path.
 const COPY_TEXT_FALLBACK_MS = 300;
 
 // The four slider values (state), bound to the range inputs with v-model.number.
@@ -20,6 +20,9 @@ const perspective = ref<number>(DEFAULT_PERSPECTIVE);
 const rotateX = ref<number>(0);
 const rotateY = ref<number>(0);
 const rotateZ = ref<number>(0);
+
+// X slider auto focus when mounted
+const xSliderRef = ref<HTMLInputElement | null>(null);
 
 // Two separate flags so the width and the label can be staggered:
 //   isCopied       → drives the .copied class (the width transition)
@@ -51,6 +54,17 @@ function reset(): void {
   rotateZ.value = 0;
 }
 
+// onMounted/onUnmounted ev testing, will be kept after wrapped in <KeepAlive></KeepAlive>
+function onKey(ev: KeyboardEvent) {
+  console.log(ev.key);
+}
+
+onMounted(() => {
+  console.log(xSliderRef.value);
+  xSliderRef.value?.focus();
+  window.addEventListener("keydown", onKey);
+});
+
 // Pending timers for the copy animation. Kept in one list so a rapid second
 // click (or unmounting the view) can cancel every one of them at once.
 let copyTimers: ReturnType<typeof setTimeout>[] = [];
@@ -62,7 +76,10 @@ function clearCopyTimers(): void {
 
 // This view unmounts whenever you navigate to another route, so cancel any
 // timer that would otherwise fire against a dead component.
-onUnmounted(clearCopyTimers);
+onUnmounted(function () {
+  clearCopyTimers();
+  window.removeEventListener("keydown", onKey);
+});
 
 // Copy a pasteable CSS snippet. This reads the *computeds* rather than
 // rebuilding the strings from the refs, so what lands on the clipboard can
@@ -86,6 +103,10 @@ async function copy(): Promise<void> {
     isCopied.value = true;
 
     copyTimers.push(
+      // Fallback path: if `transitionend` never fires (transitions disabled via
+      // prefers-reduced-motion), swap the label anyway. showCopiedLabel() is
+      // idempotent, so a double-call with the normal path is harmless.
+      setTimeout(showCopiedLabel, COPY_TEXT_FALLBACK_MS),
       // Revert both together: the label shortens instantly, so the button can
       // shrink underneath it without the long text ever being clipped.
       setTimeout(() => {
@@ -134,7 +155,13 @@ function onWidthTransitionEnd(event: TransitionEvent): void {
 
           <label>
             rotateX: {{ rotateX }}deg;
-            <input type="range" min="-180" max="180" v-model.number="rotateX" />
+            <input
+              type="range"
+              min="-180"
+              max="180"
+              v-model.number="rotateX"
+              ref="xSliderRef"
+            />
           </label>
 
           <label>

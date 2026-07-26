@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { KeepAlive } from "vue";
+
 // App shell: a nav to switch scenes, and <RouterView> where the matched
 // route's component renders (the router is registered in main.ts).
 </script>
@@ -9,7 +11,9 @@
     <RouterLink to="/perspective">Perspective</RouterLink>
   </nav>
 
-  <RouterView />
+  <RouterView v-slot="{ Component }">
+    <KeepAlive><component :is="Component" /></KeepAlive>
+  </RouterView>
 </template>
 
 <style scoped>
