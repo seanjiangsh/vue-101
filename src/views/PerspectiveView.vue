@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useKeydown } from "../composables/useKeydown";
 
 // A non-zero starting distance so the 3D effect is visible immediately: CSS
 // treats `perspective: 0` as "no perspective", which makes the rotations look
@@ -54,16 +55,13 @@ function reset(): void {
   rotateZ.value = 0;
 }
 
-// onMounted/onUnmounted ev testing, will be kept after wrapped in <KeepAlive></KeepAlive>
-function onKey(ev: KeyboardEvent) {
-  console.log(ev.key);
-}
+// Press Escape to reset. The composable owns the add/remove across the view's
+// visibility — including the <KeepAlive> case — so this stays a one-liner.
+useKeydown("Escape", reset);
 
-onMounted(() => {
-  console.log(xSliderRef.value);
-  xSliderRef.value?.focus();
-  window.addEventListener("keydown", onKey);
-});
+// Focus the rotateX slider on first mount. Under <KeepAlive> this fires only on
+// the initial mount (not on every return); use onActivated if you want the latter.
+onMounted(() => xSliderRef.value?.focus());
 
 // Pending timers for the copy animation. Kept in one list so a rapid second
 // click (or unmounting the view) can cancel every one of them at once.
@@ -74,12 +72,10 @@ function clearCopyTimers(): void {
   copyTimers = [];
 }
 
-// This view unmounts whenever you navigate to another route, so cancel any
-// timer that would otherwise fire against a dead component.
-onUnmounted(function () {
-  clearCopyTimers();
-  window.removeEventListener("keydown", onKey);
-});
+// Cancel any pending copy-animation timer on teardown. (Under <KeepAlive> this
+// only runs when the app tears down, not on navigation — but copy() also clears
+// timers at the start of each run, so no stale timer survives either way.)
+onUnmounted(clearCopyTimers);
 
 // Copy a pasteable CSS snippet. This reads the *computeds* rather than
 // rebuilding the strings from the refs, so what lands on the clipboard can
