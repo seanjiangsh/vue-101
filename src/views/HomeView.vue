@@ -7,6 +7,8 @@ import vueLogo from "../assets/vue.svg";
 
 import { useTheme, type ThemeMode } from "../composables/useTheme";
 import ColorSwatch from "../components/ColorSwatch.vue";
+import ErrorBoundary from "../components/ErrorBoundary.vue";
+import BuggyChild from "../components/BuggyChild.vue";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
@@ -50,6 +52,13 @@ const labels: Record<ThemeMode, string> = {
         Switch to {{ labels[nextTheme] }} mode
       </button>
       <ColorSwatch />
+
+      <!-- Error-boundary practice: BuggyChild throws on click; once you
+           implement onErrorCaptured in ErrorBoundary, this fallback shows
+           instead of the error crashing the scene. -->
+      <ErrorBoundary>
+        <BuggyChild />
+      </ErrorBoundary>
     </div>
   </section>
 </template>
