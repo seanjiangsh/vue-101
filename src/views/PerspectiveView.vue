@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onActivated, onUnmounted, ref } from "vue";
 import { useKeydown } from "../composables/useKeydown";
 
 // A non-zero starting distance so the 3D effect is visible immediately: CSS
@@ -59,9 +59,8 @@ function reset(): void {
 // visibility — including the <KeepAlive> case — so this stays a one-liner.
 useKeydown("Escape", reset);
 
-// Focus the rotateX slider on first mount. Under <KeepAlive> this fires only on
-// the initial mount (not on every return); use onActivated if you want the latter.
-onMounted(() => xSliderRef.value?.focus());
+// Focus the rotateX slider on activated
+onActivated(() => xSliderRef.value?.focus());
 
 // Pending timers for the copy animation. Kept in one list so a rapid second
 // click (or unmounting the view) can cancel every one of them at once.
