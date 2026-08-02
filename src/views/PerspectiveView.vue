@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onActivated, onUnmounted, ref } from "vue";
 import { useKeydown } from "../composables/useKeydown";
+import SliderControl from "../components/SliderControl.vue";
 
 // A non-zero starting distance so the 3D effect is visible immediately: CSS
 // treats `perspective: 0` as "no perspective", which makes the rotations look
@@ -22,8 +23,9 @@ const rotateX = ref<number>(0);
 const rotateY = ref<number>(0);
 const rotateZ = ref<number>(0);
 
-// X slider auto focus when mounted
-const xSliderRef = ref<HTMLInputElement | null>(null);
+// Ref to the rotateX SliderControl. It's the component instance now (not a raw
+// input), so we call its exposed focus() rather than reaching into the DOM.
+const xSliderRef = ref<InstanceType<typeof SliderControl> | null>(null);
 
 // Two separate flags so the width and the label can be staggered:
 //   isCopied       → drives the .copied class (the width transition)
@@ -133,41 +135,38 @@ function onWidthTransitionEnd(event: TransitionEvent): void {
     <main>
       <section class="settings">
         <div class="settings-container">
-          <!-- Wrapping the input in its <label> associates the two, so screen
-               readers announce the name and clicking the text focuses the
-               slider. No id/for pairs needed. -->
-          <label>
-            perspective: {{ perspective }}px;
-            <!-- min="1" keeps the slider out of the `perspective: 0` dead zone,
-                 where CSS applies no perspective at all. -->
-            <input
-              type="range"
-              min="1"
-              max="999"
-              v-model.number="perspective"
-            />
-          </label>
-
-          <label>
-            rotateX: {{ rotateX }}deg;
-            <input
-              type="range"
-              min="-180"
-              max="180"
-              v-model.number="rotateX"
-              ref="xSliderRef"
-            />
-          </label>
-
-          <label>
-            rotateY: {{ rotateY }}deg;
-            <input type="range" min="-180" max="180" v-model.number="rotateY" />
-          </label>
-
-          <label>
-            rotateZ: {{ rotateZ }}deg;
-            <input type="range" min="-180" max="180" v-model.number="rotateZ" />
-          </label>
+          <!-- Props (label/min/max/unit) go down; v-model binds two-way. The
+               value display + styling now live inside SliderControl. min=1 on
+               perspective keeps it out of the `perspective: 0` dead zone. -->
+          <SliderControl
+            label="perspective"
+            :min="1"
+            :max="999"
+            unit="px"
+            v-model="perspective"
+          />
+          <SliderControl
+            ref="xSliderRef"
+            label="rotateX"
+            :min="-180"
+            :max="180"
+            unit="deg"
+            v-model="rotateX"
+          />
+          <SliderControl
+            label="rotateY"
+            :min="-180"
+            :max="180"
+            unit="deg"
+            v-model="rotateY"
+          />
+          <SliderControl
+            label="rotateZ"
+            :min="-180"
+            :max="180"
+            unit="deg"
+            v-model="rotateZ"
+          />
 
           <button type="button" @click="reset">Reset</button>
           <!-- aria-live announces the "Style Copied!" change to screen readers. -->
@@ -228,17 +227,6 @@ main {
 .settings {
   width: 50%;
   z-index: 2;
-}
-
-label {
-  display: block;
-  color: #fff;
-}
-
-input[type="range"] {
-  display: block;
-  margin-bottom: 10px;
-  width: 200px;
 }
 
 .box-container {
