@@ -9,6 +9,7 @@ import { useTheme, type ThemeMode } from "../composables/useTheme";
 import ColorSwatch from "../components/ColorSwatch.vue";
 import ErrorBoundary from "../components/ErrorBoundary.vue";
 import BuggyChild from "../components/BuggyChild.vue";
+import AppModal from "../components/AppModal.vue";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
@@ -25,6 +26,9 @@ const labels: Record<ThemeMode, string> = {
   dark: "🌙 Dark",
   system: "💻 System",
 };
+
+// About
+const showAbout = ref<boolean>(false);
 </script>
 
 <template>
@@ -54,11 +58,22 @@ const labels: Record<ThemeMode, string> = {
       <ColorSwatch />
 
       <!-- Error-boundary practice: BuggyChild throws on click; once you
-           implement onErrorCaptured in ErrorBoundary, this fallback shows
-           instead of the error crashing the scene. -->
+      implement onErrorCaptured in ErrorBoundary, this fallback shows
+      instead of the error crashing the scene. -->
       <ErrorBoundary>
         <BuggyChild />
       </ErrorBoundary>
+
+      <button type="button" @click="showAbout = true">About</button>
     </div>
+
+    <!-- Teleport and named/scoped slots practice -->
+    <AppModal v-model:open="showAbout">
+      <template #header>About vue-101</template>
+      <p>A Vue 3 learning playground.</p>
+      <template #footer>
+        <button @click="showAbout = false">Got it</button>
+      </template>
+    </AppModal>
   </section>
 </template>
