@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// import { useKeydown } from "../composables/useKeydown"; // 👈 for the Escape TODO
+import { useKeydown } from "../composables/useKeydown";
 
 // v-model:open — a *named* model. `defineModel("open")` pairs with the parent's
 // `v-model:open="..."`. (`defineModel()` with no name is the default v-model;
@@ -10,9 +10,7 @@ function close(): void {
   open.value = false;
 }
 
-// 👉 TODO (your practice): close on Escape by reusing your composable —
-//    useKeydown("Escape", close);
-//    It already handles add/remove across visibility, so it's a one-liner.
+useKeydown("Escape", close);
 </script>
 
 <template>
@@ -46,7 +44,7 @@ function close(): void {
 
           <footer class="modal-footer">
             <!-- Named slot with a sensible default action. -->
-            <slot name="footer">
+            <slot name="footer" :close="close">
               <button type="button" @click="close">Close</button>
             </slot>
           </footer>

@@ -71,8 +71,8 @@ const showAbout = ref<boolean>(false);
     <AppModal v-model:open="showAbout">
       <template #header>About vue-101</template>
       <p>A Vue 3 learning playground.</p>
-      <template #footer>
-        <button @click="showAbout = false">Got it</button>
+      <template #footer="{ close }">
+        <button @click="close">Got it</button>
       </template>
     </AppModal>
   </section>
