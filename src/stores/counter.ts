@@ -18,14 +18,12 @@ export const useCounterStore = defineStore("counter", () => {
   // State: a ref.
   const count = ref<number>(0);
 
-  // 👉 TODO (getter): a computed derived from state — e.g. double the count.
-  //    Getters never mutate; they only read. (Like a Redux selector.)
-  const doubleCount = computed<number>(() => 0); // replace with count.value * 2
+  // Getter: a computed derived from state (never mutates). Like a Redux selector.
+  const doubleCount = computed<number>(() => count.value * 2);
 
-  // 👉 TODO (action): a function that mutates state. In Pinia you mutate state
-  //    directly — no reducers, no immutability ceremony.
+  // Action: mutates state directly — no reducers, no immutability ceremony.
   function increment(): void {
-    // count.value++;
+    count.value++;
   }
 
   // Everything returned here is exposed on the store instance.

@@ -10,12 +10,13 @@ import ColorSwatch from "../components/ColorSwatch.vue";
 import ErrorBoundary from "../components/ErrorBoundary.vue";
 import BuggyChild from "../components/BuggyChild.vue";
 import AppModal from "../components/AppModal.vue";
+import { useCounterStore } from "../stores/counter";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
 
 // Count
-const count = ref<number>(0);
+const counter = useCounterStore();
 
 // light/dark theme — all the logic lives in the composable (a Vue "hook").
 const { nextTheme, cycleTheme } = useTheme();
@@ -49,8 +50,8 @@ const showAbout = ref<boolean>(false);
       <button type="button" @click="showHero = !showHero">
         {{ showHero ? "Hide" : "Show" }} hero
       </button>
-      <button type="button" class="counter" @click="count++">
-        Count is {{ count }}
+      <button type="button" class="counter" @click="counter.increment">
+        Count is {{ counter.count }}, doubled is {{ counter.doubleCount }}
       </button>
       <button type="button" @click="cycleTheme">
         Switch to {{ labels[nextTheme] }} mode
