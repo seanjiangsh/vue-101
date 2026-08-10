@@ -5,12 +5,12 @@ import viteLogo from "../assets/vite.svg";
 import heroImg from "../assets/hero.png";
 import vueLogo from "../assets/vue.svg";
 
-import { useTheme, type ThemeMode } from "../composables/useTheme";
 import ColorSwatch from "../components/ColorSwatch.vue";
 import ErrorBoundary from "../components/ErrorBoundary.vue";
 import BuggyChild from "../components/BuggyChild.vue";
 import AppModal from "../components/AppModal.vue";
 import { useCounterStore } from "../stores/counter";
+import { useThemeStore, type ThemeMode } from "../stores/theme";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
@@ -18,8 +18,8 @@ const showHero = ref<boolean>(true);
 // Count
 const counter = useCounterStore();
 
-// light/dark theme — all the logic lives in the composable (a Vue "hook").
-const { nextTheme, cycleTheme } = useTheme();
+// light/dark theme
+const theme = useThemeStore();
 
 // Presentation only: how each mode is labelled in the button.
 const labels: Record<ThemeMode, string> = {
@@ -53,8 +53,8 @@ const showAbout = ref<boolean>(false);
       <button type="button" class="counter" @click="counter.increment">
         Count is {{ counter.count }}, doubled is {{ counter.doubleCount }}
       </button>
-      <button type="button" @click="cycleTheme">
-        Switch to {{ labels[nextTheme] }} mode
+      <button type="button" @click="theme.cycleTheme">
+        Switch to {{ labels[theme.nextTheme] }} mode
       </button>
       <ColorSwatch />
 

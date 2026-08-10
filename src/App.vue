@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { KeepAlive } from "vue";
 
+import { useThemeStore } from "./stores/theme";
+
+// Instantiate the theme store at the app root so its side effects (toggle the
+// <html> class, persist to localStorage) run on boot, before any route resolves.
+// A Pinia store's setup runs once on first use; doing it here — not only inside a
+// view — keeps the theme applied even when deep-linking straight to /perspective.
+useThemeStore();
+
 // App shell: a nav to switch scenes, and <RouterView> where the matched
 // route's component renders (the router is registered in main.ts).
 </script>

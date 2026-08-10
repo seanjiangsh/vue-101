@@ -1,8 +1,15 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
-export type ThemeMode = "light" | "dark" | "system";
-type EffectiveTheme = "light" | "dark";
+import { cycle } from "../utils/array";
+
+// Single source of truth for the theme values: derive the TYPES from the
+// runtime tuples so the two can never drift apart. (Renamed to `effectiveThemes`
+// so it doesn't shadow the `effectiveTheme` computed inside the store.)
+const effectiveThemes = ["light", "dark"] as const; // the concrete rendered themes
+const themes = [...effectiveThemes, "system"] as const; // + the "follow OS" choice
+export type ThemeMode = (typeof themes)[number]; // "light" | "dark" | "system"
+type EffectiveTheme = (typeof effectiveThemes)[number]; // "light" | "dark"
 
 function isThemeMode(value: unknown): value is ThemeMode {
   return value === "light" || value === "dark" || value === "system";
@@ -35,20 +42,26 @@ export const useThemeStore = defineStore("theme", () => {
     mode.value === "system" ? systemTheme.value : mode.value,
   );
 
-  // 👉 TODO (getter): nextTheme — the next value in ["light","dark","system"].
-  //    Reuse your util: `import { cycle } from "../utils/array"`, add a
-  //    `themeOrder` tuple, then `cycle(themeOrder, mode.value)`.
-  const nextTheme = computed<ThemeMode>(() => mode.value); // replace
+  // Getter: the next mode in the cycle, reusing the shared cycle() util.
+  const nextTheme = computed<ThemeMode>(() => cycle(themes, mode.value));
 
-  // 👉 TODO (action): cycleTheme — advance mode to nextTheme.value.
+  // Action: advance to the next mode. In Pinia you mutate state directly.
   function cycleTheme(): void {
-    // mode.value = nextTheme.value;
+    mode.value = nextTheme.value;
   }
 
-  // 👉 TODO (side effects): move the two watches from useTheme (import `watch`):
-  //   1) watch(effectiveTheme, t => document.documentElement.classList
-  //        .toggle("dark", t === "dark"), { immediate: true })
-  //   2) watch(mode, m => localStorage.setItem("theme", m), { immediate: true })
+  // Side effects (moved verbatim from the composable): mirror the *rendered*
+  // theme onto <html>, and persist the *choice*. immediate:true applies on load.
+  watch(
+    effectiveTheme,
+    (theme) =>
+      document.documentElement.classList.toggle("dark", theme === "dark"),
+    { immediate: true },
+  );
+
+  watch(mode, (mode) => localStorage.setItem("theme", mode), {
+    immediate: true,
+  });
 
   return { mode, effectiveTheme, nextTheme, cycleTheme };
 });
