@@ -11,11 +11,14 @@ describe("cycle", () => {
     expect(cycle(items, "a")).toBe("b");
   });
 
-  // 👉 TODO: wrapping — cycle(items, "c") should return "a".
-  it.todo("wraps around from the last item to the first");
+  it("wraps around from the last item to the first", () => {
+    expect(cycle(items, "c")).toBe("a");
+  });
 
-  // 👉 TODO: fallback — when the value isn't in the array it returns items[0].
-  //    (You'll need a cast to pass a non-member, e.g. cycle(items, "z" as "a").
-  //    Testing that defensive branch is itself the lesson.)
-  it.todo("falls back to the first item when the value is not found");
+  // The `as "a"` cast is deliberate: "z" isn't a member of `items`, so TS would
+  // reject it. We force it through to exercise cycle()'s defensive branch
+  // (indexOf === -1 → return the first item) — a path the types normally prevent.
+  it("falls back to the first item when the value is not found", () => {
+    expect(cycle(items, "z" as "a")).toBe("a");
+  });
 });
