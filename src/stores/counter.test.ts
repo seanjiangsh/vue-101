@@ -15,9 +15,18 @@ describe("counter store", () => {
     expect(counter.count).toBe(0);
   });
 
-  // 👉 TODO: call counter.increment() and assert count becomes 1.
-  it.todo("increments the count");
+  it("increments the count", () => {
+    const counter = useCounterStore();
+    counter.increment();
+    expect(counter.count).toBe(1);
+  });
 
-  // 👉 TODO: increment a couple of times and assert doubleCount === count * 2.
-  it.todo("computes doubleCount as count * 2");
+  // Two increments → count is 2, so the getter should report 4 — proving it
+  // reacts to state changes, not just the initial value.
+  it("computes doubleCount as count * 2", () => {
+    const counter = useCounterStore();
+    counter.increment();
+    counter.increment();
+    expect(counter.doubleCount).toBe(4);
+  });
 });
