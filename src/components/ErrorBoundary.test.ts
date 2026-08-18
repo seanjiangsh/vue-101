@@ -20,13 +20,15 @@ describe("ErrorBoundary", () => {
     expect(wrapper.text()).toContain("all good");
   });
 
-  // 👉 TODO: when a descendant throws, the fallback should render instead of
-  //    the children. Sketch:
-  //      const wrapper = mount(ErrorBoundary, { slots: { default: Boom } });
-  //      await nextTick(); // the boundary re-renders after onErrorCaptured runs
-  //      expect(wrapper.text()).toContain("Something broke");
-  //    Note: Vue will log the caught error to the console during this test —
-  //    that's expected, not a failure. (You can silence it with a
-  //    vi.spyOn(console, "error").mockImplementation(() => {}) if it bothers you.)
-  it.todo("shows the fallback when a child throws");
+  // A throwing descendant is caught by onErrorCaptured, which swaps in the
+  // fallback. Two things to note:
+  //  - `await nextTick()`: the throw happens during render; the fallback only
+  //    appears on the NEXT render (after error.value is set), so assert after it.
+  //  - Vue logs the caught error to the console during this test — that's
+  //    expected, not a failure (silence with vi.spyOn(console, "error") if noisy).
+  it("shows the fallback when a child throws", async () => {
+    const wrapper = mount(ErrorBoundary, { slots: { default: Boom } });
+    await nextTick();
+    expect(wrapper.text()).toContain("kaboom");
+  });
 });
