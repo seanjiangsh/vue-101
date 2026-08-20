@@ -23,4 +23,14 @@ describe("theme store", () => {
     const theme = useThemeStore();
     expect(theme.mode).toBe("system");
   });
+
+  it("cycles light -> dark -> system", () => {
+    const theme = useThemeStore();
+    theme.cycleTheme();
+    expect(theme.mode).toBe("light");
+    theme.cycleTheme();
+    expect(theme.mode).toBe("dark");
+    theme.cycleTheme();
+    expect(theme.mode).toBe("system");
+  });
 });
