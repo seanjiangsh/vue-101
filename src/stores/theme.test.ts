@@ -24,6 +24,9 @@ describe("theme store", () => {
     expect(theme.mode).toBe("system");
   });
 
+  // Walks the full loop and wraps back to the start, so an off-by-one in cycle()
+  // (e.g. missing the modulo wrap: system → light) would fail the last assertion.
+  // Synchronous state, so no await/nextTick needed.
   it("cycles light -> dark -> system", () => {
     const theme = useThemeStore();
     theme.cycleTheme();
@@ -32,5 +35,15 @@ describe("theme store", () => {
     expect(theme.mode).toBe("dark");
     theme.cycleTheme();
     expect(theme.mode).toBe("system");
+  });
+
+  // effectiveTheme is the *rendered* theme: for an explicit light/dark it's just
+  // the mode, but for "system" it follows the OS — which the matchMedia stub
+  // controls. beforeEach stubs matches:false (OS prefers light), so a "system"
+  // mode resolves to "light". This is the one test that actually exercises the mock.
+  it("resolves system mode to a light OS preference", () => {
+    const theme = useThemeStore();
+    expect(theme.mode).toBe("system");
+    expect(theme.effectiveTheme).toBe("light");
   });
 });
