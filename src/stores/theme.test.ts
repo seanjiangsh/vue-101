@@ -46,4 +46,19 @@ describe("theme store", () => {
     expect(theme.mode).toBe("system");
     expect(theme.effectiveTheme).toBe("light");
   });
+
+  // The mirror of the test above — only `matches` flips to true (OS = dark).
+  // The re-stub must happen BEFORE useThemeStore(), since the store reads
+  // matchMedia during setup. It's safely scoped to this test because beforeEach
+  // re-stubs matchMedia back to matches:false before every test.
+  it("resolves system mode to a dark OS preference", () => {
+    vi.stubGlobal("matchMedia", () => ({
+      matches: true,
+      addEventListener() {},
+      removeEventListener() {},
+    }));
+    const theme = useThemeStore();
+    expect(theme.mode).toBe("system");
+    expect(theme.effectiveTheme).toBe("dark");
+  });
 });
