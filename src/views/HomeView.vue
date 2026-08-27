@@ -9,11 +9,16 @@ import ColorSwatch from "../components/ColorSwatch.vue";
 import ErrorBoundary from "../components/ErrorBoundary.vue";
 import BuggyChild from "../components/BuggyChild.vue";
 import AppModal from "../components/AppModal.vue";
+import IntervalDemo from "../components/IntervalDemo.vue";
 import { useCounterStore } from "../stores/counter";
 import { useThemeStore, type ThemeMode } from "../stores/theme";
 
 // Hero toggling
 const showHero = ref<boolean>(true);
+
+// Interval demo toggle — hiding it UNMOUNTS IntervalDemo, which disposes its
+// effect scope and (once you add onScopeDispose) stops the timer.
+const showInterval = ref<boolean>(true);
 
 // Count
 const counter = useCounterStore();
@@ -66,6 +71,14 @@ const showAbout = ref<boolean>(false);
       </ErrorBoundary>
 
       <button type="button" @click="showAbout = true">About</button>
+
+      <!-- effectScope / onScopeDispose practice: start the ticker, then hide
+           the demo. Unmounting disposes its scope — with onScopeDispose the
+           timer stops; without it, it leaks (ticks keep firing in the console). -->
+      <button type="button" @click="showInterval = !showInterval">
+        {{ showInterval ? "Hide" : "Show" }} interval demo
+      </button>
+      <IntervalDemo v-if="showInterval" />
     </div>
 
     <!-- Teleport and named/scoped slots practice -->
