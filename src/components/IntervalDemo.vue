@@ -3,8 +3,11 @@ import { ref } from "vue";
 import { useInterval } from "../composables/useInterval";
 
 const ticks = ref<number>(0);
+// The log is a learning aid: watch the console while you Start the ticker, then
+// Hide the demo. With onScopeDispose in useInterval the logs stop on unmount;
+// without it they'd keep firing forever (the leak). Remove once you've seen it.
 const { isActive, start, stop } = useInterval(() => {
-  console.log("ticks value", ticks.value);
+  console.log("[IntervalDemo] tick", ticks.value);
   ticks.value++;
 }, 1000);
 </script>
