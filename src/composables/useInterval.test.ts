@@ -24,10 +24,20 @@ describe("useInterval", () => {
     scope.stop(); // dispose so this test cleans up after itself
   });
 
-  // 👉 TODO: stop() should halt the ticking.
-  //   Run useInterval in a scope, start(), advanceTimersByTime(2000) → 2 calls,
-  //   then stop(), advanceTimersByTime(2000) → STILL 2 (no more ticks).
-  it.todo("stops ticking after stop()");
+  // stop() must CLEAR the timer, not just flip a flag: the "still 2 after
+  // another 2s" assertion is the proof — a paused-but-not-cleared timer would
+  // tick again. Run inside a scope so useInterval's onScopeDispose has a home.
+  it("stops ticking after stop()", () => {
+    const cb = vi.fn();
+    const scope = effectScope();
+    const { start, stop } = scope.run(() => useInterval(cb, 1000))!;
+    start();
+    vi.advanceTimersByTime(2000);
+    stop();
+    vi.advanceTimersByTime(2000);
+    expect(cb).toHaveBeenCalledTimes(2);
+    scope.stop();
+  });
 
   // 👉 TODO: start() must be idempotent — a second start() must NOT stack a
   //   second timer. start(); start(); advanceTimersByTime(1000) → called ONCE.
