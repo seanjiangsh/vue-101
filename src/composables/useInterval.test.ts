@@ -39,10 +39,19 @@ describe("useInterval", () => {
     scope.stop();
   });
 
-  // 👉 TODO: start() must be idempotent — a second start() must NOT stack a
-  //   second timer. start(); start(); advanceTimersByTime(1000) → called ONCE.
-  //   (This is the `if (isActive.value) return` guard, under test.)
-  it.todo("does not stack timers when start() is called twice");
+  // A second start() must NOT create a second interval. The `if (isActive.value)
+  // return` guard makes it a no-op, so there's one timer → one tick here; drop
+  // the guard and two overlapping timers would make this 2. The test defends it.
+  it("does not stack timers when start() is called twice", () => {
+    const cb = vi.fn();
+    const scope = effectScope();
+    const { start } = scope.run(() => useInterval(cb, 1000))!;
+    start();
+    start();
+    vi.advanceTimersByTime(1000);
+    expect(cb).toHaveBeenCalledTimes(1);
+    scope.stop();
+  });
 
   // 👉 TODO (the effectScope payoff): disposing the SCOPE stops the timer, even
   //   though you never call stop() yourself.
