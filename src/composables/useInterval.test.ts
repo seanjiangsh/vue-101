@@ -53,12 +53,19 @@ describe("useInterval", () => {
     scope.stop();
   });
 
-  // 👉 TODO (the effectScope payoff): disposing the SCOPE stops the timer, even
-  //   though you never call stop() yourself.
-  //     const scope = effectScope();
-  //     scope.run(() => useInterval(cb, 1000).start());
-  //     advanceTimersByTime(2000) → 2 calls; scope.stop(); advanceTimersByTime(2000)
-  //     → still 2. That proves onScopeDispose(stop) fires on scope.stop() — the
-  //   thing onUnmounted could never do, because there's no component here.
-  it.todo("stops ticking when the effect scope is disposed");
+  // The payoff — this test NEVER calls stop(). scope.stop() disposes the scope,
+  // which fires useInterval's onScopeDispose(stop) → the timer clears. The
+  // "still 2 after another 2s" assertion proves it. This is exactly what
+  // onScopeDispose gives you over onUnmounted: cleanup with no component in sight.
+  it("stops ticking when the effect scope is disposed", () => {
+    const cb = vi.fn();
+    const scope = effectScope();
+    const { start } = scope.run(() => useInterval(cb, 1000))!;
+    start();
+    vi.advanceTimersByTime(2000);
+    expect(cb).toHaveBeenCalledTimes(2);
+    scope.stop();
+    vi.advanceTimersByTime(2000);
+    expect(cb).toHaveBeenCalledTimes(2);
+  });
 });
