@@ -10,6 +10,7 @@ import ErrorBoundary from "../components/ErrorBoundary.vue";
 import BuggyChild from "../components/BuggyChild.vue";
 import AppModal from "../components/AppModal.vue";
 import IntervalDemo from "../components/IntervalDemo.vue";
+import FlushTimingDemo from "../components/FlushTimingDemo.vue";
 import { useCounterStore } from "../stores/counter";
 import { useThemeStore, type ThemeMode } from "../stores/theme";
 
@@ -79,6 +80,10 @@ const showAbout = ref<boolean>(false);
         {{ showInterval ? "Hide" : "Show" }} interval demo
       </button>
       <IntervalDemo v-if="showInterval" />
+
+      <!-- Watcher flush-timing practice: open the console, click "Add item",
+           and compare the [pre ] vs [post] height logs. -->
+      <FlushTimingDemo />
     </div>
 
     <!-- Teleport and named/scoped slots practice -->
