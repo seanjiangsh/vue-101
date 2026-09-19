@@ -1,4 +1,4 @@
-import type { InjectionKey, Ref } from "vue";
+import { inject, provide, type InjectionKey, type Ref } from "vue";
 
 // --- provide / inject practice ------------------------------------------------
 // This is Vue's dependency injection: a parent `provide`s a value under a key,
@@ -30,43 +30,34 @@ export const defaultSwatchConfig: SwatchConfig = {
 // so provide() rejects a wrong value and inject() returns the right type with no
 // casting. (React: this is what createContext<T>() gives you — minus the
 // `T | null` default and the null-check ceremony at every useContext call.)
-export const swatchConfigKey = Symbol(
-  "swatchConfig",
-) as InjectionKey<Ref<SwatchConfig>>;
+export const swatchConfigKey = Symbol("swatchConfig") as InjectionKey<
+  Ref<SwatchConfig>
+>;
 
 /**
- * TODO(you) #1 — provide the config so descendants can inject it.
+ * Provider side. A component calls this in its setup to share `config` with all
+ * descendants. We pass the WHOLE ref (not `config.value`): injection shares the
+ * live reference, so when the provider mutates the ref, every injector updates.
+ * Handing over `.value` would freeze a snapshot that never changes.
  *
- *   import { provide } from "vue";
- *   ...
- *   provide(swatchConfigKey, config);
- *
- * Pass the WHOLE ref, not `config.value`: reactivity flows through injection, so
- * when the provider later mutates the ref, every injector re-renders. Hand over
- * `.value` and you'd freeze a snapshot (the injectors would never update).
+ * Must run synchronously during setup (same rule as lifecycle hooks) — `provide`
+ * registers into the *current* component instance and returns nothing.
  */
 export function provideSwatchConfig(config: Ref<SwatchConfig>): void {
-  // 👉 your provide(...) call goes here.
-  void config; // (remove this line once you use `config`)
+  provide(swatchConfigKey, config);
 }
 
 /**
- * TODO(you) #2 — inject the config, with a sensible "no provider" behaviour.
- *
- *   import { inject } from "vue";
- *   ...
- *   // Option A — supply a default (component still works standalone):
- *   return inject(swatchConfigKey, ref(defaultSwatchConfig));
- *
- *   // Option B — a "must be used inside a provider" guard (like a typed
- *   // useContext wrapper that throws instead of returning null):
- *   const config = inject(swatchConfigKey);
- *   if (!config) throw new Error("useSwatchConfig must be used within a provider");
- *   return config;
- *
- * Pick one and return a Ref<SwatchConfig>. (Consumers read config.value.size etc.)
+ * Consumer side. Any descendant calls this to read the shared config. `inject`
+ * returns `Ref<SwatchConfig> | undefined` — undefined when there's no provider
+ * above — so we guard and throw. That turns silent breakage into a clear error
+ * at the offending component: the typed equivalent of a `useContext` wrapper
+ * that refuses to hand back a null context. (Alternative: pass a default as the
+ * 2nd arg to `inject` if the component should work standalone instead.)
  */
 export function useSwatchConfig(): Ref<SwatchConfig> {
-  // 👉 replace this with your inject(...) implementation.
-  throw new Error("useSwatchConfig() not implemented yet — see TODO #2");
+  const config = inject(swatchConfigKey);
+  if (!config)
+    throw new Error("useSwatchConfig must be used within a provider");
+  return config;
 }
