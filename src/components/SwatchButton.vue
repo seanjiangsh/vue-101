@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
 import type { ColorName } from "../composables/useColorSwatch";
 import {
-  defaultSwatchConfig,
+  useSwatchConfig,
   type SwatchConfig,
-  // useSwatchConfig,  // 👈 TODO(you) #3: uncomment and use this below
 } from "../composables/useSwatchConfig";
 
 // `color` and `active` are genuine per-item props/events — they differ for every
@@ -14,14 +11,11 @@ import {
 defineProps<{ color: ColorName; active: boolean }>();
 defineEmits<{ select: [] }>();
 
-// TODO(you) #3 — read the SHARED display config via injection instead of this
-// local default. Once useSwatchConfig() is implemented, replace the line below:
-//
-//   const config = useSwatchConfig();
-//
-// Note there's NO `config` prop and HomeView/ColorSwatch never passes one down —
-// that's the whole point: the value arrives through provide/inject, not props.
-const config = ref<SwatchConfig>(defaultSwatchConfig);
+// Shared display config (size/showLabels), pulled from the nearest provider via
+// inject — no `config` prop is threaded down. It's a Ref; the template reads
+// `config.size` directly because templates auto-unwrap top-level refs (in script
+// you'd need `config.value.size`).
+const config = useSwatchConfig();
 
 // Maps the injected size to pixel dimensions (proof the injection reached here).
 const sizePx: Record<SwatchConfig["size"], { w: number; h: number }> = {
@@ -44,7 +38,9 @@ const sizePx: Record<SwatchConfig["size"], { w: number; h: number }> = {
     @click="$emit('select')"
   >
     <!-- showLabels (from injected config) decides label vs. compact dot. -->
-    <template v-if="config.showLabels">{{ active ? "✓ " + color : color }}</template>
+    <template v-if="config.showLabels">{{
+      active ? "✓ " + color : color
+    }}</template>
     <template v-else>{{ active ? "✓" : "●" }}</template>
   </button>
 </template>

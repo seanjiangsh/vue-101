@@ -3,6 +3,7 @@ import { onRenderTracked, onRenderTriggered, ref } from "vue";
 
 import { useColorSwatch } from "../composables/useColorSwatch";
 import {
+  defaultSwatchConfig,
   provideSwatchConfig,
   type SwatchConfig,
 } from "../composables/useSwatchConfig";
@@ -14,10 +15,11 @@ const { activeColor, hideAlerts, visibleColors } = useColorSwatch();
 
 // --- provide / inject practice: this component is the PROVIDER ---------------
 // It owns the shared display config and provides it. The <SwatchButton> leaves
-// below inject it — notice we never pass a `config` prop to them. Mutating this
-// ref (via the controls below) will update every button, once you wire up
-// provide (TODO #1) and inject (TODO #3).
-const swatchConfig = ref<SwatchConfig>({ size: "md", showLabels: true });
+// below inject it — we never pass a `config` prop to them. The size/showLabels
+// controls mutate this ref, and injection carries the change to every button.
+// Spread the default (don't seed the ref with the exported object directly) so
+// mutating our copy never pollutes the shared defaultSwatchConfig.
+const swatchConfig = ref<SwatchConfig>({ ...defaultSwatchConfig });
 provideSwatchConfig(swatchConfig);
 
 // --- Render-debug hooks (dev-only; stripped from production builds) ---------
