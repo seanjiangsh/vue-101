@@ -11,6 +11,7 @@ import BuggyChild from "../components/BuggyChild.vue";
 import AppModal from "../components/AppModal.vue";
 import IntervalDemo from "../components/IntervalDemo.vue";
 import FlushTimingDemo from "../components/FlushTimingDemo.vue";
+import DropdownDemo from "../components/DropdownDemo.vue";
 import { useCounterStore } from "../stores/counter";
 import { useThemeStore, type ThemeMode } from "../stores/theme";
 
@@ -84,6 +85,10 @@ const showAbout = ref<boolean>(false);
       <!-- Watcher flush-timing practice: open the console, click "Add item",
            and compare the [pre ] vs [post] height logs. -->
       <FlushTimingDemo />
+
+      <!-- Custom-directive practice: once v-click-outside is implemented, open
+           this menu and click elsewhere on the page to close it. -->
+      <DropdownDemo />
     </div>
 
     <!-- Teleport and named/scoped slots practice -->
