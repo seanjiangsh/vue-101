@@ -24,14 +24,14 @@ interface ClickOutsideEl extends HTMLElement {
 
 export const vClickOutside: Directive<ClickOutsideEl, ClickOutsideHandler> = {
   mounted(el, binding) {
-    // TODO(you) #1 — set up the outside-click listener.
-    //  a) Make a handler(event): if the click target is NOT inside `el`, call
-    //     the bound handler. Hint: `el.contains(event.target as Node)` is true
-    //     when the click was inside — so you want the negation.
-    //  b) Save it on `el._clickOutside` (so #2 can remove this same reference).
-    //  c) document.addEventListener("click", el._clickOutside).
-    void el; // remove once you use el
-    void binding; // binding.value is the handler you must call
+    // Build the listener and stash it on the element, so unmounted() can hand
+    // the SAME reference to removeEventListener. `el.contains(target)` is true
+    // for clicks inside el, so we bail on those and only fire on outside clicks.
+    el._clickOutside = (event) => {
+      if (el.contains(event.target as Node)) return;
+      binding.value(event);
+    };
+    document.addEventListener("click", el._clickOutside);
   },
   unmounted(el) {
     // TODO(you) #2 — tear it down (skip this and the listener LEAKS: it keeps
