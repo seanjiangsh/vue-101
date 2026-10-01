@@ -34,11 +34,11 @@ export const vClickOutside: Directive<ClickOutsideEl, ClickOutsideHandler> = {
     document.addEventListener("click", el._clickOutside);
   },
   unmounted(el) {
-    // TODO(you) #2 — tear it down (skip this and the listener LEAKS: it keeps
-    // firing after the element is gone, holding a stale closure).
-    //  a) document.removeEventListener("click", el._clickOutside) — guard for
-    //     undefined first.
-    //  b) delete el._clickOutside.
-    void el; // remove once you use el
+    // Cleanup: remove the same listener mounted() stored, then drop the prop.
+    // Skip this and the listener LEAKS — it keeps firing on every document click
+    // after the element is gone, holding its stale closure (el, binding) alive.
+    if (el._clickOutside)
+      document.removeEventListener("click", el._clickOutside);
+    delete el._clickOutside;
   },
 };
