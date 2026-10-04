@@ -12,6 +12,7 @@ import AppModal from "../components/AppModal.vue";
 import IntervalDemo from "../components/IntervalDemo.vue";
 import FlushTimingDemo from "../components/FlushTimingDemo.vue";
 import DropdownDemo from "../components/DropdownDemo.vue";
+import DebouncedSearchDemo from "../components/DebouncedSearchDemo.vue";
 import { useCounterStore } from "../stores/counter";
 import { useThemeStore, type ThemeMode } from "../stores/theme";
 
@@ -89,6 +90,10 @@ const showAbout = ref<boolean>(false);
       <!-- Custom-directive practice: once v-click-outside is implemented, open
            this menu and click elsewhere on the page to close it. -->
       <DropdownDemo />
+
+      <!-- customRef practice: type and watch "searches fired". Once the ref is
+           debounced it goes up once per pause instead of once per keystroke. -->
+      <DebouncedSearchDemo />
     </div>
 
     <!-- Teleport and named/scoped slots practice -->
