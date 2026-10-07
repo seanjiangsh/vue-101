@@ -8,9 +8,9 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 describe("useDebouncedRef", () => {
-  // Every test runs inside an effectScope, the same as useInterval.test.ts. Once
-  // TODO #2 adds onScopeDispose, the composable needs an active scope to attach
-  // its cleanup to.
+  // Every test runs inside an effectScope, the same as useInterval.test.ts:
+  // useDebouncedRef calls onScopeDispose, which needs an active scope to attach
+  // its cleanup to (without one, Vue warns and the cleanup never runs).
   it("starts with the initial value", () => {
     const scope = effectScope();
     const query = scope.run(() => useDebouncedRef("vue", 300))!;
@@ -18,7 +18,7 @@ describe("useDebouncedRef", () => {
     scope.stop();
   });
 
-  // TODO(you) #3: turn these into real tests once TODO #1 is done.
+  // TODO(you) #3: turn these into real tests.
   // Tools: `query.value = "x"` to write, vi.advanceTimersByTime(ms) to move the
   // clock forward, expect(query.value) to check what readers see.
   it.todo("keeps the old value until the delay has passed");

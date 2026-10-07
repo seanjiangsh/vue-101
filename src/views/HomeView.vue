@@ -87,12 +87,12 @@ const showAbout = ref<boolean>(false);
            and compare the [pre ] vs [post] height logs. -->
       <FlushTimingDemo />
 
-      <!-- Custom-directive practice: once v-click-outside is implemented, open
-           this menu and click elsewhere on the page to close it. -->
+      <!-- Custom-directive practice: open this menu and click elsewhere on the
+           page; v-click-outside closes it. -->
       <DropdownDemo />
 
-      <!-- customRef practice: type and watch "searches fired". Once the ref is
-           debounced it goes up once per pause instead of once per keystroke. -->
+      <!-- customRef practice: type and watch "searches fired". The ref is
+           debounced, so it goes up once per pause, not once per keystroke. -->
       <DebouncedSearchDemo />
     </div>
 

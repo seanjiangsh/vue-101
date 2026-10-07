@@ -1,4 +1,4 @@
-import { customRef, type Ref } from "vue";
+import { customRef, onScopeDispose, type Ref } from "vue";
 
 // --- customRef practice ------------------------------------------------------
 // A normal ref does two things automatically: when read, it TRACKS whoever is
@@ -15,7 +15,7 @@ export function useDebouncedRef<T>(initial: T, delay = 300): Ref<T> {
   let value = initial;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
-  return customRef<T>((track, trigger) => ({
+  const debounced = customRef<T>((track, trigger) => ({
     get() {
       // Register the current reader (render/computed/watch) as a dependent.
       // Leave this out and nothing would ever re-run when the value changes.
@@ -35,10 +35,10 @@ export function useDebouncedRef<T>(initial: T, delay = 300): Ref<T> {
     },
   }));
 
-  // TODO(you) #2: stop a pending timer from firing after its owner is gone.
-  // If the component unmounts during the delay, the timeout still fires later
-  // and calls trigger() on a ref nobody uses. Register an onScopeDispose
-  // callback that clears the timer (the same pattern as useInterval in Part A).
-  // Note: `return customRef(...)` above exits the function, so store the ref in
-  // a const, register the cleanup, and then return the const.
+  // Cancel a write that's still waiting when the owner goes away (component
+  // unmount, or scope.stop() in a test). This closes over the same `timer` that
+  // set() reassigns, so it clears whichever timer is pending at that moment.
+  onScopeDispose(() => clearTimeout(timer));
+
+  return debounced;
 }
