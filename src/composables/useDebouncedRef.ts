@@ -13,6 +13,7 @@ import { customRef, type Ref } from "vue";
 
 export function useDebouncedRef<T>(initial: T, delay = 300): Ref<T> {
   let value = initial;
+  let timer: ReturnType<typeof setTimeout> | undefined;
 
   return customRef<T>((track, trigger) => ({
     get() {
@@ -22,16 +23,15 @@ export function useDebouncedRef<T>(initial: T, delay = 300): Ref<T> {
       return value;
     },
     set(newValue) {
-      // TODO(you) #1: debounce this write.
-      // For now it applies immediately, so this is just a plain ref. Make it:
-      //  a) clear any pending timer (a new keystroke cancels the old one),
-      //  b) start a new setTimeout(..., delay) that assigns `value = newValue`
-      //     and then calls trigger().
-      // You'll need a `let timer: ReturnType<typeof setTimeout> | undefined`
-      // declared next to `value` above.
-      value = newValue;
-      trigger();
-      void delay; // remove once `delay` is used
+      // Debounce: each write cancels the one still waiting, so only the last
+      // write in a burst lands. The assignment sits inside the timeout next to
+      // trigger(), so readers keep seeing the old value until the delay ends
+      // and then all move to the new value together.
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        value = newValue;
+        trigger();
+      }, delay);
     },
   }));
 
