@@ -21,7 +21,16 @@ describe("useDebouncedRef", () => {
   // TODO(you) #3: turn these into real tests.
   // Tools: `query.value = "x"` to write, vi.advanceTimersByTime(ms) to move the
   // clock forward, expect(query.value) to check what readers see.
-  it.todo("keeps the old value until the delay has passed");
+  it("keeps the old value until the delay has passed", () => {
+    const scope = effectScope();
+    const query = scope.run(() => useDebouncedRef("vue", 300))!;
+    query.value = "x";
+    vi.advanceTimersByTime(299);
+    expect(query.value).toBe("vue");
+    vi.advanceTimersByTime(1);
+    expect(query.value).toBe("x");
+    scope.stop();
+  });
   it.todo("applies only the last write when set several times quickly");
   it.todo("drops a pending write when the effect scope is disposed");
 });
