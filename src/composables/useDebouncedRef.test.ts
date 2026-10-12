@@ -31,6 +31,22 @@ describe("useDebouncedRef", () => {
     expect(query.value).toBe("x");
     scope.stop();
   });
-  it.todo("applies only the last write when set several times quickly");
+  it("applies only the last write when set several times quickly", () => {
+    const scope = effectScope();
+    const query = scope.run(() => useDebouncedRef("vue", 300))!;
+    query.value = "a";
+    vi.advanceTimersByTime(100);
+    expect(query.value).toBe("vue");
+    query.value = "b";
+    vi.advanceTimersByTime(100);
+    expect(query.value).toBe("vue");
+    query.value = "c";
+    expect(vi.getTimerCount()).toBe(1);
+    vi.advanceTimersByTime(299);
+    expect(query.value).toBe("vue");
+    vi.advanceTimersByTime(1);
+    expect(query.value).toBe("c");
+    scope.stop();
+  });
   it.todo("drops a pending write when the effect scope is disposed");
 });
