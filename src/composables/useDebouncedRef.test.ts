@@ -18,9 +18,8 @@ describe("useDebouncedRef", () => {
     scope.stop();
   });
 
-  // TODO(you) #3: turn these into real tests.
-  // Tools: `query.value = "x"` to write, vi.advanceTimersByTime(ms) to move the
-  // clock forward, expect(query.value) to check what readers see.
+  // Checks the edge of the delay: still the old value at 299ms, the new one at
+  // exactly 300ms. Checking only "long after" would pass with a wrong delay.
   it("keeps the old value until the delay has passed", () => {
     const scope = effectScope();
     const query = scope.run(() => useDebouncedRef("vue", 300))!;
@@ -31,6 +30,9 @@ describe("useDebouncedRef", () => {
     expect(query.value).toBe("x");
     scope.stop();
   });
+  // Spaced writes prove each one RESTARTS the timer: at 499ms after "a" the
+  // value is still unchanged, and only one timer is pending after "c". Remove
+  // clearTimeout from set() and both of those assertions fail.
   it("applies only the last write when set several times quickly", () => {
     const scope = effectScope();
     const query = scope.run(() => useDebouncedRef("vue", 300))!;
@@ -48,5 +50,18 @@ describe("useDebouncedRef", () => {
     expect(query.value).toBe("c");
     scope.stop();
   });
-  it.todo("drops a pending write when the effect scope is disposed");
+  // scope.stop() mid-delay stands in for a component unmounting while a write
+  // is waiting. The timer count drops to 0 at stop(), before time moves, so the
+  // onScopeDispose cleanup is the only thing that could have cleared it. No
+  // scope.stop() at the end: the one in the middle is the point of the test.
+  it("drops a pending write when the effect scope is disposed", () => {
+    const scope = effectScope();
+    const query = scope.run(() => useDebouncedRef("vue", 300))!;
+    query.value = "x";
+    expect(vi.getTimerCount()).toBe(1);
+    scope.stop();
+    expect(vi.getTimerCount()).toBe(0);
+    vi.advanceTimersByTime(500);
+    expect(query.value).toBe("vue");
+  });
 });
