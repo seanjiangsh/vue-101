@@ -13,6 +13,7 @@ import IntervalDemo from "../components/IntervalDemo.vue";
 import FlushTimingDemo from "../components/FlushTimingDemo.vue";
 import DropdownDemo from "../components/DropdownDemo.vue";
 import DebouncedSearchDemo from "../components/DebouncedSearchDemo.vue";
+import AsyncDemo from "../components/AsyncDemo.vue";
 import { useCounterStore } from "../stores/counter";
 import { useThemeStore, type ThemeMode } from "../stores/theme";
 
@@ -94,6 +95,10 @@ const showAbout = ref<boolean>(false);
       <!-- customRef practice: type and watch "searches fired". The ref is
            debounced, so it goes up once per pause, not once per keystroke. -->
       <DebouncedSearchDemo />
+
+      <!-- Async practice: <Suspense> around an async-setup component, and a
+           lazily loaded component via defineAsyncComponent. -->
+      <AsyncDemo />
     </div>
 
     <!-- Teleport and named/scoped slots practice -->
