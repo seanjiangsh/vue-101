@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import type { Quote } from "../utils/fakeQuoteApi";
+import { fetchQuote } from "../utils/fakeQuoteApi";
 
-defineProps<{ fail?: boolean }>();
+const props = defineProps<{ fail?: boolean }>();
 
-// TODO(you) #1: fetch the quote with a top-level `await`.
-//  a) Keep the props: `const props = defineProps<{ fail?: boolean }>();`
-//  b) import { fetchQuote } from "../utils/fakeQuoteApi";
-//  c) Replace the placeholder below with:
-//       const quote = await fetchQuote(props.fail);
-//
-// Any top-level `await` in <script setup> turns this into an ASYNC component:
-// its setup returns a promise, and Vue won't render it until that settles. Its
-// parent then needs a <Suspense> around it (TODO #2). Without one, Vue warns
-// and renders nothing. Try it once before doing #2 so you see the warning.
-// React comparison: this is "suspending" a component while its data loads.
-const quote: Quote = { text: "(placeholder, not fetched yet)", author: "TODO #1" };
+// A top-level `await` makes this an ASYNC component: its setup returns a
+// promise, and Vue renders it only after that promise settles. The parent must
+// wrap it in <Suspense> to show something meanwhile; without one, Vue warns and
+// renders nothing. A rejection (fail = true) surfaces as an error the nearest
+// onErrorCaptured can catch. React comparison: the component "suspends" while
+// its data loads. `quote` is inferred as Quote from fetchQuote's return type.
+const quote = await fetchQuote(props.fail);
 </script>
 
 <template>
