@@ -3,13 +3,14 @@ import { ref } from "vue";
 
 import ErrorBoundary from "./ErrorBoundary.vue";
 import AsyncQuote from "./AsyncQuote.vue";
+import LoadingSpinner from "./LoadingSpinner.vue";
 
 // TODO(you) #3: load StatsPanel lazily with defineAsyncComponent.
 // Right now it's a normal static import, so it ships in the main bundle even
-// if nobody ever clicks "Show stats". Replace this import with:
+// if nobody ever clicks "Show stats". Replace this import with
+// (LoadingSpinner is already imported above):
 //
 //   import { defineAsyncComponent } from "vue";   (add to the import above)
-//   import LoadingSpinner from "./LoadingSpinner.vue";
 //
 //   const StatsPanel = defineAsyncComponent({
 //     loader: () => import("./StatsPanel.vue"),
@@ -44,19 +45,16 @@ const showStats = ref<boolean>(false);
         <button type="button" @click="quoteKey++">New quote</button>
       </div>
 
+      <!-- ErrorBoundary goes OUTSIDE Suspense so a rejected fetch reaches its
+           onErrorCaptured (Retry remounts the quote and fetches again). Inside,
+           Suspense shows #fallback until AsyncQuote's setup promise resolves. -->
       <ErrorBoundary>
-        <!-- TODO(you) #2: wrap <AsyncQuote> in <Suspense>.
-             <Suspense>
-               <AsyncQuote ... />                (the default slot)
-               <template #fallback>…</template>  (shown while it's pending)
-             </Suspense>
-             LoadingSpinner works well as the fallback (import it).
-             Then try `:timeout="0"` on <Suspense> and click "New quote":
-             without it, Suspense keeps the OLD quote on screen while the new
-             one loads; with it, the fallback shows straight away.
-             ErrorBoundary sits OUTSIDE Suspense, so a rejected fetch reaches
-             its onErrorCaptured; its Retry button remounts and refetches. -->
-        <AsyncQuote :key="quoteKey" :fail="failQuote" />
+        <Suspense>
+          <AsyncQuote :key="quoteKey" :fail="failQuote" />
+          <template #fallback>
+            <LoadingSpinner />
+          </template>
+        </Suspense>
       </ErrorBoundary>
     </section>
 
